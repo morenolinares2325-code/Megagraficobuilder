@@ -30,7 +30,7 @@ compile_btn = st.sidebar.button("🚀 Compilar con Motor Completo")
 @st.cache_data
 def load_eurusd_data():
     np.random.seed(42)
-    dates = pd.date_range(start="2026-01-01", periods=300, freq="H")
+    dates = pd.date_range(start="2026-01-01", periods=300, freq="h")
     base_price = 1.0850
     returns = np.random.normal(0, 0.0005, len(dates))
     close_prices = base_price * np.cumprod(1 + returns)
