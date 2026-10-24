@@ -266,29 +266,16 @@ elif st.session_state.seccion == "1. 📊 Estación Pro (200+ Indicadores)":
                     priceAxis: {{ text: {{ size: 12, color: '#d1d4dc' }} }}
                 }});
 
-                // Registro dinámico de funciones TA-Lib mediante WebAssembly
                 function addIndicator() {{
                     const sel = document.getElementById('ind-select');
                     const val = sel.value;
                     
                     if (val.startsWith('TALIB_')) {{
                         const talibName = val.replace('TALIB_', '');
-                        if (typeof talib === 'undefined') {{
-                            alert("El motor TA-Lib WASM aún está cargando. Espera un segundo.");
-                            return;
-                        }}
-                        
-                        // Extraer arrays numéricos de las velas para TA-Lib
-                        const closes = rawData.map(d => d.close);
-                        const highs = rawData.map(d => d.high);
-                        const lows = rawData.map(d => d.low);
-                        const volumes = rawData.map(d => d.volume);
-
                         try {{
-                            // Ejecución real en cliente vía TA-Lib WASM
                             console.log("Calculando indicador TA-Lib: " + talibName);
                             chart.createIndicator(talibName);
-                        } catch(e) {{
+                        }} catch(e) {{
                             alert("Indicador TA-Lib registrado o aplicado: " + talibName);
                         }}
                     }} else {{
