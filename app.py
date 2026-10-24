@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilos CSS de alta gama (Inspirado en TradingView / Estaciones Pro)
+# Estilos CSS de alta gama
 st.markdown("""
     <style>
         .stApp { background-color: #0b0e14; color: #f0f3f6; }
@@ -21,16 +21,24 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Inicializar navegación
-if 'seccion' not in st.session_state:
+# Lista de opciones del menú
+opciones_menu = [
+    "🏠 Inicio", 
+    "1. 📊 Estación Pro (Gráfico + QuickJS)", 
+    "2. ⚙️ Builder & Editor Modal", 
+    "3. 🚀 Repositorio para Cursor"
+]
+
+# Inicializar y validar estado de navegación de forma segura
+if 'seccion' not in st.session_state or st.session_state.seccion not in opciones_menu:
     st.session_state.seccion = "🏠 Inicio"
 
-# Menú lateral
+# Menú lateral con índice seguro
 st.sidebar.markdown("## 🧭 AvizorChart Quantix")
 st.session_state.seccion = st.sidebar.radio(
     "Ir a:",
-    ["🏠 Inicio", "1. 📊 Estación Pro (Gráfico + QuickJS)", "2. ⚙️ Builder & Editor Modal", "3. 🚀 Repositorio para Cursor"],
-    index=["🏠 Inicio", "1. 📊 Estación Pro (Gráfico + QuickJS)", "2. ⚙️ Builder & Editor Modal", "3. 🚀 Repositorio para Cursor"].index(st.session_state.seccion)
+    opciones_menu,
+    index=opciones_menu.index(st.session_state.seccion)
 )
 st.sidebar.markdown("---")
 st.sidebar.info("⚡ **Motor Cuántico Activo:** KLineChart Core + WebGPU Emulation + QuickJS Sandbox.")
@@ -117,7 +125,6 @@ elif st.session_state.seccion == "1. 📊 Estación Pro (Gráfico + QuickJS)":
                 continue
         j_data = json.dumps(records)
 
-        # HTML avanzado con barra de herramientas superior estilo TradingView y modal de scripts integrado
         html_pro = f"""
         <!DOCTYPE html>
         <html lang="es">
@@ -136,7 +143,6 @@ elif st.session_state.seccion == "1. 📊 Estación Pro (Gráfico + QuickJS)":
                 .tv-btn:hover {{ background: #363c4e; color: #2962ff; border-color: #2962ff; }}
                 #chart-container {{ width: 100%; height: 530px; }}
                 
-                /* Modal flotante de Scripts (Inspirado en KLineChart-Pro / Quantix) */
                 #script-modal {{
                     display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
                     width: 500px; background: #1e222d; border: 1px solid #2a2e39; border-radius: 8px; z-index: 1000; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -159,7 +165,6 @@ elif st.session_state.seccion == "1. 📊 Estación Pro (Gráfico + QuickJS)":
 
             <div id="chart-container"></div>
 
-            <!-- Modal de Scripts Estilo Quantix -->
             <div id="script-modal">
                 <div class="modal-header">
                     <span>⚡ Editor de Estrategias QuickJS / Pine</span>
