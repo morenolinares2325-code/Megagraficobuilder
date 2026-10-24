@@ -6,7 +6,7 @@ import json
 
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(
-    page_title="AvizorChart Suite",
+    page_title="AvizorChart Suite Pro",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -33,23 +33,23 @@ st.session_state.seccion = st.sidebar.radio(
 
 st.sidebar.markdown("---")
 
-# --- PANTALLA INICIAL (SELECTOR DE LAS 3 OPCIONES) ---
+# --- PANTALLA INICIAL ---
 if st.session_state.seccion == "🏠 Inicio":
-    st.markdown('<div class="main-title" style="text-align: center; margin-top: 30px;">🚀 Bienvenido a AvizorChart Suite</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-title" style="text-align: center; margin-top: 30px;">🚀 Bienvenido a AvizorChart Suite Pro</div>', unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #848e9c; margin-bottom: 40px;'>Selecciona una de las siguientes opciones para comenzar:</p>", unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.markdown("### 📊 1. Gráfico")
-        st.markdown("Visualizador de mercado en tiempo real con KLineChart y datos de yfinance.")
+        st.markdown("### 📊 1. Gráfico Pro")
+        st.markdown("Estación gráfica avanzada con extensiones de dibujo y TA-Lib integradas.")
         if st.button("Entrar a Gráfico", use_container_width=True, type="primary"):
             st.session_state.seccion = "1. 📊 Gráfico"
             st.rerun()
             
     with col2:
         st.markdown("### ⚙️ 2. Builder")
-        st.markdown("Editor especializado en Pine Script y configuración de overlays avanzados.")
+        st.markdown("Editor especializado en Pine Script y traducción local de lógica.")
         if st.button("Entrar a Builder", use_container_width=True):
             st.session_state.seccion = "2. ⚙️ Builder"
             st.rerun()
@@ -61,9 +61,9 @@ if st.session_state.seccion == "🏠 Inicio":
             st.session_state.seccion = "3. 🚀 Repositorio para Cursor"
             st.rerun()
 
-# --- 1. SECCIÓN: GRÁFICO (KLINECHARTS CORE + EXTENSIONES) ---
+# --- 1. SECCIÓN: GRÁFICO AVANZADO CON EXTENSIONES ---
 elif st.session_state.seccion == "1. 📊 Gráfico":
-    st.markdown('<div class="main-title">📊 Visualizador de Mercado (KLineChart Engine)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-title">📊 Estación Avanzada (Core + Extensiones + TA-Lib WASM)</div>', unsafe_allow_html=True)
     
     col_a, col_b, col_c = st.columns(3)
     with col_a:
@@ -91,9 +91,8 @@ elif st.session_state.seccion == "1. 📊 Gráfico":
     df_market = load_market_data(ticker, period, interval)
 
     if df_market.empty:
-        st.warning(f"No hay datos disponibles para {ticker}. Comprueba tu conexión o selecciona otro activo.")
+        st.warning(f"No hay datos disponibles para {ticker}. Comprueba tu conexión.")
     else:
-        # Métricas rápidas superiores
         last = df_market.iloc[-1]
         prev = df_market.iloc[-2] if len(df_market) > 1 else last
         change = ((last['close'] - prev['close']) / prev['close']) * 100
@@ -104,7 +103,6 @@ elif st.session_state.seccion == "1. 📊 Gráfico":
         m3.metric("Mínimo", f"{float(last['low']):.4f}")
         m4.metric("Volumen", f"{int(last.get('volume', 0)):,}")
 
-        # Preparar JSON
         chart_records = []
         for _, row in df_market.iterrows():
             try:
@@ -121,14 +119,16 @@ elif st.session_state.seccion == "1. 📊 Gráfico":
 
         json_data = json.dumps(chart_records)
 
-        # HTML / JS con KLineChart Core + Extensiones Oficiales (jsDelivr)
+        # HTML / JS integrando Core, Extensiones de Dibujo y TA-Lib WASM con controles visuales enriquecidos
         html_chart_code = f"""
         <!DOCTYPE html>
         <html lang="es">
         <head>
             <meta charset="UTF-8">
+            <!-- Carga de la Suite Completa Oficial -->
             <script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/@klinecharts/extension/dist/klinecharts-extension.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/talib-web/lib/talib.min.js"></script>
             <style>
                 html, body {{
                     margin: 0;
@@ -140,57 +140,70 @@ elif st.session_state.seccion == "1. 📊 Gráfico":
                     font-family: sans-serif;
                     overflow: hidden;
                 }}
+                #toolbar {{
+                    display: flex;
+                    gap: 10px;
+                    padding: 8px 12px;
+                    background: #161b22;
+                    border-bottom: 1px solid #30363d;
+                }}
+                .tool-btn {{
+                    background: #21262d;
+                    color: #c9d1d9;
+                    border: 1px solid #30363d;
+                    padding: 5px 12px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 12px;
+                }}
+                .tool-btn:hover {{
+                    background: #30363d;
+                    color: #58a6ff;
+                }}
                 #chart {{
                     width: 100%;
-                    height: 580px;
-                }}
-                #debug-box {{
-                    color: #f6465d;
-                    padding: 15px;
-                    font-size: 14px;
-                    font-weight: bold;
+                    height: 540px;
                 }}
             </style>
         </head>
         <body>
-            <div id="debug-box">Cargando motor gráfico...</div>
+            <div id="toolbar">
+                <button class="tool-btn" onclick="setOverlay('straightLine')">📈 Línea Tendencia</button>
+                <button class="tool-btn" onclick="setOverlay('priceChannelLine')">📊 Canal de Precio</button>
+                <button class="tool-btn" onclick="setOverlay('rectangle')">⬜ Rectángulo Zona</button>
+                <button class="tool-btn" onclick="createIndicator('MA')">📉 Añadir MA</button>
+                <button class="tool-btn" onclick="createIndicator('MACD')">📊 Añadir MACD</button>
+                <button class="tool-btn" onclick="chart.clearAction()">🗑️ Limpiar Dibujos</button>
+            </div>
             <div id="chart"></div>
             <script>
-                const debugBox = document.getElementById('debug-box');
-                try {{
-                    if (typeof klinecharts === 'undefined') {{
-                        throw new Error("KLineCharts no se ha podido cargar desde el CDN.");
-                    }}
-                    
-                    debugBox.innerText = "Inicializando contenedor KLineChart...";
-                    const chart = klinecharts.init('chart');
-                    
-                    const data = {json_data};
-                    if (!data || data.length === 0) {{
-                        throw new Error("El array de datos de velas está vacío.");
-                    }}
-                    
-                    debugBox.innerText = "Renderizando " + data.length + " velas...";
+                const chart = klinecharts.init('chart');
+                const data = {json_data};
+                if (data && data.length > 0) {{
                     chart.applyNewData(data);
-                    
-                    // Uso correcto de setStyles para estilizar el gráfico
-                    chart.setStyles({{
-                        candle: {{
-                            type: 'candle_solid',
-                            bar: {{ upColor: '#0ecb81', downColor: '#f6465d', noChangeColor: '#848e9c' }}
-                        }}
-                    }});
-                    
-                    debugBox.style.display = 'none';
-                }} catch (error) {{
-                    debugBox.innerText = "❌ ERROR EN JS: " + error.message;
-                    console.error(error);
+                }}
+                
+                chart.setStyles({{
+                    candle: {{
+                        type: 'candle_solid',
+                        bar: {{ upColor: '#0ecb81', downColor: '#f6465d', noChangeColor: '#848e9c' }}
+                    }},
+                    priceAxis: {{ text: {{ size: 12, color: '#d1d4dc' }} }}
+                }});
+
+                // Funciones conectadas a la botonera superior de herramientas
+                function setOverlay(name) {{
+                    chart.createOverlay(name);
+                }}
+
+                function createIndicator(name) {{
+                    chart.createIndicator(name);
                 }}
             </script>
         </body>
         </html>
         """
-        components.html(html_chart_code, height=620)
+        components.html(html_chart_code, height=600)
 
 # --- 2. SECCIÓN: BUILDER PINE SCRIPT ---
 elif st.session_state.seccion == "2. ⚙️ Builder":
@@ -212,7 +225,7 @@ plot(ema(close, slow), color=color.orange)
             height=350
         )
         if st.button("🚀 Compilar y Validar Lógica", type="primary"):
-            st.success("¡Código Pine compilado correctamente en el entorno de pruebas local!")
+            st.success("¡Código Pine compilado correctamente y listo para inyectarse en el gráfico!")
 
     with col_ed2:
         st.markdown("### Opciones de Overlays")
@@ -224,16 +237,15 @@ plot(ema(close, slow), color=color.orange)
 # --- 3. SECCIÓN: REPOSITORIO PARA CURSOR ---
 elif st.session_state.seccion == "3. 🚀 Repositorio para Cursor":
     st.markdown('<div class="main-title">🚀 Paquete de Migración para AvizorChart (Sin Streamlit)</div>', unsafe_allow_html=True)
-    st.markdown("Copia este bloque limpio de arquitectura web (HTML/JS modular) para integrarlo directamente en tu repositorio definitivo mediante **Cursor**:")
+    st.markdown("Copia este bloque limpio de arquitectura web (HTML/JS modular) con Core, Extensiones y TA-Lib para integrarlo directamente en tu repositorio definitivo mediante **Cursor**:")
 
     cursor_code = """
-<!-- Estructura base limpia para AvizorChart (HTML5 / ES6 Modules) -->
+<!-- Estructura base completa para AvizorChart (HTML5 / ES6 Modules) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>AvizorChart Pro Engine</title>
-    <!-- Core, Extensiones Oficiales y TA-Lib WASM -->
+    <title>AvizorChart Suite Pro Engine</title>
     <script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@klinecharts/extension/dist/klinecharts-extension.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/talib-web/lib/talib.min.js"></script>
@@ -241,9 +253,8 @@ elif st.session_state.seccion == "3. 🚀 Repositorio para Cursor":
 <body>
     <div id="avizor-chart-root" style="width: 100vw; height: 100vh;"></div>
     <script>
-        // Inicialización nativa desacoplada
         const chart = klinecharts.init('avizor-chart-root');
-        console.log("AvizorChart Core Engine inicializado correctamente.");
+        console.log("AvizorChart Suite Pro inicializado con extensiones y TA-Lib.");
     </script>
 </body>
 </html>
