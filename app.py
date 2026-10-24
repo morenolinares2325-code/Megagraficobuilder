@@ -55,7 +55,6 @@ if menu_choice == "1. 📊 Gráfico":
             return df[['Datetime', 'open', 'high', 'low', 'close', 'volume']].dropna()
         except Exception as e:
             return pd.DataFrame()
-
         
     df_market = load_market_data(ticker, period, interval)
 
@@ -90,7 +89,7 @@ if menu_choice == "1. 📊 Gráfico":
 
         json_data = json.dumps(chart_records)
 
-        # HTML / JS robusto para KLineChart con altura fija garantizada
+        # HTML / JS corregido sin window.onload para evitar pantalla en negro
         html_chart_code = f"""
         <!DOCTYPE html>
         <html lang="es">
@@ -116,7 +115,7 @@ if menu_choice == "1. 📊 Gráfico":
         <body>
             <div id="chart"></div>
             <script>
-                window.onload = function() {{
+                try {{
                     const chart = klinecharts.init('chart');
                     const data = {json_data};
                     if (data && data.length > 0) {{
@@ -128,7 +127,9 @@ if menu_choice == "1. 📊 Gráfico":
                             bar: {{ upColor: '#0ecb81', downColor: '#f6465d', noChangeColor: '#848e9c' }}
                         }}
                     }});
-                }};
+                }} catch (error) {{
+                    console.error("Error al inicializar KLineChart:", error);
+                }}
             </script>
         </body>
         </html>
