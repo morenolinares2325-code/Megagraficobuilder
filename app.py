@@ -14,13 +14,11 @@ if "render_trigger" not in st.session_state:
 
 class IndicatorBuilderEngine:
     def __init__(self):
-        self.version = "2.6.0"
+        self.version = "2.6.1"
 
     def parse_to_klinechart(self, mode: str, raw_code: str) -> str:
         if mode == "KLineChart (JS/TS)":
             return raw_code
-        
-        # Indicador de prueba limpio y 100% compatible superpuesto en el precio
         return raw_code
 
 engine = IndicatorBuilderEngine()
@@ -145,12 +143,12 @@ with col_editor:
         ["KLineChart (JS/TS)", "Pine Script", "MQL5", "cTrader (C#)"]
     )
     
-    # Código de prueba robusto y limpio que dibuja una media móvil simple y puntos de señal directos sobre el precio
     default_code = """if (typeof klinecharts !== 'undefined' && chart) {
     klinecharts.registerIndicator({
         name: "AVIZOR_SIMPLE_TEST",
         shortName: "Test SMA + Signals",
-        series: 'price', // Forzar que vaya en el panel principal del precio
+        series: 'price',
+        paneId: 'candle', // <-- Forzar panel principal de velas
         figures: [
             { key: 'sma', title: 'SMA 10: ', type: 'line' },
             { key: 'signal', title: 'Punto: ', type: 'circle' }
@@ -165,8 +163,6 @@ with col_editor:
                     sum += arr[j].close;
                 }
                 let valSma = sum / period;
-                
-                // Ponemos un punto de señal cada 15 velas para comprobar que se dibujan
                 let sig = (i % 15 === 0) ? bar.high + 0.0020 : null;
                 
                 return {
