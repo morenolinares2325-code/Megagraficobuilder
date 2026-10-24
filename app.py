@@ -19,20 +19,53 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- MENÚ DE NAVEGACIÓN LATERAL ---
+# Inicializar el estado de navegación
+if 'seccion' not in st.session_state:
+    st.session_state.seccion = "🏠 Inicio"
+
+# Menú lateral de navegación rápida
 st.sidebar.markdown("## 🧭 Navegación AvizorChart")
-menu_choice = st.sidebar.radio(
-    "Selecciona sección:",
-    ["1. 📊 Gráfico", "2. ⚙️ Builder", "3. 🚀 Repositorio para Cursor"]
+st.session_state.seccion = st.sidebar.radio(
+    "Ir a:",
+    ["🏠 Inicio", "1. 📊 Gráfico", "2. ⚙️ Builder", "3. 🚀 Repositorio para Cursor"],
+    index=["🏠 Inicio", "1. 📊 Gráfico", "2. ⚙️ Builder", "3. 🚀 Repositorio para Cursor"].index(st.session_state.seccion)
 )
 
 st.sidebar.markdown("---")
 
+# --- PANTALLA INICIAL (SELECTOR DE LAS 3 OPCIONES) ---
+if st.session_state.seccion == "🏠 Inicio":
+    st.markdown('<div class="main-title" style="text-align: center; margin-top: 30px;">🚀 Bienvenido a AvizorChart Suite</div>', unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #848e9c; margin-bottom: 40px;'>Selecciona una de las siguientes opciones para comenzar:</p>", unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("### 📊 1. Gráfico")
+        st.markdown("Visualizador de mercado en tiempo real con KLineChart y datos de yfinance.")
+        if st.button("Entrar a Gráfico", use_container_width=True, type="primary"):
+            st.session_state.seccion = "1. 📊 Gráfico"
+            st.rerun()
+            
+    with col2:
+        st.markdown("### ⚙️ 2. Builder")
+        st.markdown("Editor especializado en Pine Script y configuración de overlays avanzados.")
+        if st.button("Entrar a Builder", use_container_width=True):
+            st.session_state.seccion = "2. ⚙️ Builder"
+            st.rerun()
+            
+    with col3:
+        st.markdown("### 🚀 3. Repositorio para Cursor")
+        st.markdown("Estructura web limpia y desacoplada lista para integrar en AvizorChart.")
+        if st.button("Ver Código para Cursor", use_container_width=True):
+            st.session_state.seccion = "3. 🚀 Repositorio para Cursor"
+            st.rerun()
+
 # --- 1. SECCIÓN: GRÁFICO ---
-if menu_choice == "1. 📊 Gráfico":
+elif st.session_state.seccion == "1. 📊 Gráfico":
     st.markdown('<div class="main-title">📊 Visualizador de Mercado (KLineChart Pro)</div>', unsafe_allow_html=True)
     
-    col_a, col_b, col_c = st.sidebar.columns(3)
+    col_a, col_b, col_c = st.columns(3)
     with col_a:
         ticker = st.selectbox("Activo", ["EURUSD=X", "BTC-USD", "AAPL", "GC=X", "NVDA"], index=0)
     with col_b:
@@ -88,14 +121,14 @@ if menu_choice == "1. 📊 Gráfico":
 
         json_data = json.dumps(chart_records)
 
-        # HTML / JS con depuración de errores visual en pantalla
+        # HTML / JS con CDN de jsDelivr y depuración visual
         html_chart_code = f"""
         <!DOCTYPE html>
         <html lang="es">
         <head>
             <meta charset="UTF-8">
-            <script src="https://unpkg.com/klinecharts/dist/klinecharts.min.js"></script>
-            <script src="https://unpkg.com/@klinecharts/extension/dist/klinecharts-extension.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/@klinecharts/extension/dist/klinecharts-extension.min.js"></script>
             <style>
                 html, body {{
                     margin: 0;
@@ -126,7 +159,7 @@ if menu_choice == "1. 📊 Gráfico":
                 const debugBox = document.getElementById('debug-box');
                 try {{
                     if (typeof klinecharts === 'undefined') {{
-                        throw new Error("KLineCharts no se ha podido cargar desde el CDN (Bloqueo de red o error de script).");
+                        throw new Error("KLineCharts no se ha podido cargar desde el CDN de jsDelivr.");
                     }}
                     
                     debugBox.innerText = "Inicializando contenedor KLineChart...";
@@ -147,7 +180,6 @@ if menu_choice == "1. 📊 Gráfico":
                         }}
                     }});
                     
-                    // Si todo va bien, ocultamos el cuadro de texto de depuración
                     debugBox.style.display = 'none';
                 }} catch (error) {{
                     debugBox.innerText = "❌ ERROR EN JS: " + error.message;
@@ -160,7 +192,7 @@ if menu_choice == "1. 📊 Gráfico":
         components.html(html_chart_code, height=620)
 
 # --- 2. SECCIÓN: BUILDER PINE SCRIPT ---
-elif menu_choice == "2. ⚙️ Builder":
+elif st.session_state.seccion == "2. ⚙️ Builder":
     st.markdown('<div class="main-title">⚙️ Pine Script Builder & Analyzer</div>', unsafe_allow_html=True)
     
     col_ed1, col_ed2 = st.columns([2, 1])
@@ -189,7 +221,7 @@ plot(ema(close, slow), color=color.orange)
         st.info("💡 Estas opciones configuran los parámetros que se inyectarán en el motor de extensiones de KLineChart.")
 
 # --- 3. SECCIÓN: REPOSITORIO PARA CURSOR ---
-elif menu_choice == "3. 🚀 Repositorio para Cursor":
+elif st.session_state.seccion == "3. 🚀 Repositorio para Cursor":
     st.markdown('<div class="main-title">🚀 Paquete de Migración para AvizorChart (Sin Streamlit)</div>', unsafe_allow_html=True)
     st.markdown("Copia este bloque limpio de arquitectura web (HTML/JS modular) para integrarlo directamente en tu repositorio definitivo mediante **Cursor**:")
 
@@ -201,11 +233,11 @@ elif menu_choice == "3. 🚀 Repositorio para Cursor":
     <meta charset="UTF-8">
     <title>AvizorChart Pro Engine</title>
     <!-- Core, Pro, Extensiones y TA-Lib WASM -->
-    <script src="https://unpkg.com/klinecharts/dist/klinecharts.min.js"></script>
-    <script src="https://unpkg.com/@klinecharts/pro/dist/klinecharts-pro.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/@klinecharts/pro/dist/klinecharts-pro.css">
-    <script src="https://unpkg.com/@klinecharts/extension/dist/klinecharts-extension.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tal_web/lib/talib.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.css">
+    <script src="https://cdn.jsdelivr.net/npm/@klinecharts/extension/dist/klinecharts-extension.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/talib-web/lib/talib.min.js"></script>
 </head>
 <body>
     <div id="avizor-chart-root" style="width: 100vw; height: 100vh;"></div>
