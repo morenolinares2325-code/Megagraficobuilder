@@ -42,7 +42,7 @@ if st.session_state.seccion == "🏠 Inicio":
     
     with col1:
         st.markdown("### 📊 1. Gráfico")
-        st.markdown("Visualizador de mercado en tiempo real con KLineChart y datos de yfinance.")
+        st.markdown("Visualizador Pro con barra de herramientas, selectores y datos de yfinance.")
         if st.button("Entrar a Gráfico", use_container_width=True, type="primary"):
             st.session_state.seccion = "1. 📊 Gráfico"
             st.rerun()
@@ -61,9 +61,9 @@ if st.session_state.seccion == "🏠 Inicio":
             st.session_state.seccion = "3. 🚀 Repositorio para Cursor"
             st.rerun()
 
-# --- 1. SECCIÓN: GRÁFICO ---
+# --- 1. SECCIÓN: GRÁFICO (KLINECHARTS PRO CON UI COMPLETA) ---
 elif st.session_state.seccion == "1. 📊 Gráfico":
-    st.markdown('<div class="main-title">📊 Visualizador de Mercado (KLineChart Pro)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-title">📊 Visualizador de Mercado (KLineChart Pro Suite)</div>', unsafe_allow_html=True)
     
     col_a, col_b, col_c = st.columns(3)
     with col_a:
@@ -93,7 +93,7 @@ elif st.session_state.seccion == "1. 📊 Gráfico":
     if df_market.empty:
         st.warning(f"No hay datos disponibles para {ticker}. Comprueba tu conexión o selecciona otro activo.")
     else:
-        # Métricas rápidas
+        # Métricas rápidas superiores
         last = df_market.iloc[-1]
         prev = df_market.iloc[-2] if len(df_market) > 1 else last
         change = ((last['close'] - prev['close']) / prev['close']) * 100
@@ -121,14 +121,15 @@ elif st.session_state.seccion == "1. 📊 Gráfico":
 
         json_data = json.dumps(chart_records)
 
-        # HTML / JS con CDN de jsDelivr y depuración visual
+        # HTML / JS utilizando klinechartsPro para mostrar la interfaz completa con selectores y herramientas
         html_chart_code = f"""
         <!DOCTYPE html>
         <html lang="es">
-        <head>
+        head>
             <meta charset="UTF-8">
             <script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.js"></script>
-            <script src="https://cdn.jsdelivr.net/npm/@klinecharts/extension/dist/klinecharts-extension.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.js"></script>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.css">
             <style>
                 html, body {{
                     margin: 0;
@@ -140,56 +141,39 @@ elif st.session_state.seccion == "1. 📊 Gráfico":
                     font-family: sans-serif;
                     overflow: hidden;
                 }}
-                #chart {{
+                #chart-pro-container {{
                     width: 100%;
-                    height: 560px;
-                }}
-                #debug-box {{
-                    color: #f6465d;
-                    padding: 15px;
-                    font-size: 14px;
-                    font-weight: bold;
+                    height: 620px;
                 }}
             </style>
         </head>
         <body>
-            <div id="debug-box">Cargando motor gráfico...</div>
-            <div id="chart"></div>
+            <div id="chart-pro-container"></div>
             <script>
-                const debugBox = document.getElementById('debug-box');
                 try {{
-                    if (typeof klinecharts === 'undefined') {{
-                        throw new Error("KLineCharts no se ha podido cargar desde el CDN de jsDelivr.");
+                    if (typeof klinechartsPro === 'undefined') {{
+                        throw new Error("KLineCharts Pro no se ha podido cargar desde el CDN.");
                     }}
                     
-                    debugBox.innerText = "Inicializando contenedor KLineChart...";
-                    const chart = klinecharts.init('chart');
-                    
-                    const data = {json_data};
-                    if (!data || data.length === 0) {{
-                        throw new Error("El array de datos de velas está vacío.");
-                    }}
-                    
-                    debugBox.innerText = "Renderizando " + data.length + " velas...";
-                    chart.applyNewData(data);
-                    
-                    chart.setStyle({{
-                        candle: {{
-                            type: 'candle_solid',
-                            bar: {{ upColor: '#0ecb81', downColor: '#f6465d', noChangeColor: '#848e9c' }}
-                        }}
+                    // Inicializar la interfaz completa ChartPro (con barra de herramientas y selectores nativos)
+                    const chartPro = new klinechartsPro.ChartPro({{
+                        container: 'chart-pro-container',
+                        library: klinecharts
                     }});
                     
-                    debugBox.style.display = 'none';
+                    const data = {json_data};
+                    if (data && data.length > 0) {{
+                        chartPro.applyNewData(data);
+                    }}
                 }} catch (error) {{
-                    debugBox.innerText = "❌ ERROR EN JS: " + error.message;
+                    document.body.innerHTML = "<div style='color: #f6465d; padding: 20px; font-weight: bold;'>❌ ERROR EN JS: " + error.message + "</div>";
                     console.error(error);
                 }}
             </script>
         </body>
         </html>
         """
-        components.html(html_chart_code, height=620)
+        components.html(html_chart_code, height=640)
 
 # --- 2. SECCIÓN: BUILDER PINE SCRIPT ---
 elif st.session_state.seccion == "2. ⚙️ Builder":
@@ -242,9 +226,12 @@ elif st.session_state.seccion == "3. 🚀 Repositorio para Cursor":
 <body>
     <div id="avizor-chart-root" style="width: 100vw; height: 100vh;"></div>
     <script>
-        // Inicialización nativa desacoplada de cualquier framework backend
-        const chart = klinecharts.init('avizor-chart-root');
-        console.log("AvizorChart Engine inicializado correctamente.");
+        // Inicialización nativa desacoplada con interfaz Pro completa
+        const chartPro = new klinechartsPro.ChartPro({
+            container: 'avizor-chart-root',
+            library: klinecharts
+        });
+        console.log("AvizorChart Pro Engine inicializado correctamente.");
     </script>
 </body>
 </html>
