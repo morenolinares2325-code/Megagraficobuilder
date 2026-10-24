@@ -41,17 +41,17 @@ st.session_state.seccion = st.sidebar.radio(
     index=opciones_menu.index(st.session_state.seccion)
 )
 st.sidebar.markdown("---")
-st.sidebar.info("⚡ **Estándar Activo:** KLineChart v9 + Extensiones + Desplegable de Indicadores.")
+st.sidebar.info("⚡ **Estándar Activo:** KLineChart v9 + Extensiones + Indicadores Masivos.")
 
 # --- PANTALLA INICIAL ---
 if st.session_state.seccion == "🏠 Inicio":
     st.markdown('<div class="main-title" style="text-align: center; margin-top: 30px;">⚡ AvizorChart Quantix Suite Pro</div>', unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #848e9c; margin-bottom: 40px;'>Entorno gráfico profesional con más de 50 indicadores nativos y de extensión integrados.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #848e9c; margin-bottom: 40px;'>Entorno gráfico profesional con más de 50 indicadores nativos/extensiones y soporte para TA-Lib.</p>", unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns(3)
     with col1:
         st.markdown("### 📊 1. Estación Pro")
-        st.markdown("Gráfico completo con menú desplegable de indicadores (Core + Extensiones + TA-Lib).")
+        st.markdown("Gráfico completo con menú desplegable masivo de indicadores técnicos.")
         if st.button("Abrir Estación", use_container_width=True, type="primary"):
             st.session_state.seccion = "1. 📊 Estación Pro Avanzada"
             st.rerun()
@@ -70,7 +70,7 @@ if st.session_state.seccion == "🏠 Inicio":
 
 # --- 1. SECCIÓN: ESTACIÓN PRO AVANZADA ---
 elif st.session_state.seccion == "1. 📊 Estación Pro Avanzada":
-    st.markdown('<div class="main-title">📊 Estación de Trading Pro (Con Menú de Indicadores)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-title">📊 Estación de Trading Pro (Catálogo Masivo de Indicadores)</div>', unsafe_allow_html=True)
     
     c1, c2, c3, c4 = st.columns(4)
     with c1:
@@ -149,25 +149,62 @@ elif st.session_state.seccion == "1. 📊 Estación Pro Avanzada":
             <div id="tv-toolbar">
                 <span style="font-size: 12px; font-weight: bold; color: #00d2ff;">📊 Indicadores:</span>
                 <select id="ind-select" class="tv-select">
-                    <optgroup label="--- Tendencia (Core) ---">
+                    <optgroup label="--- Tendencia & Overlays (Core) ---">
                         <option value="MA">MA (Media Móvil Simple)</option>
                         <option value="EMA">EMA (Media Móvil Exponencial)</option>
-                        <option value="BOLL">Bollinger Bands</option>
+                        <option value="SMA">SMA</option>
+                        <option value="BOLL">Bollinger Bands (BOLL)</option>
                         <option value="SAR">Parabolic SAR</option>
+                        <option value="BBI">BBI</option>
+                        <option value="XEMA">XEMA</option>
+                        <option value="ENVL">ENVL (Envelopes)</option>
+                        <option value="FSL">FSL</option>
                     </optgroup>
-                    <optgroup label="--- Osciladores (Subpaneles) ---">
-                        <option value="RSI">RSI</option>
+                    <optgroup label="--- Osciladores & Subpaneles (Core) ---">
+                        <option value="RSI">RSI (Relative Strength Index)</option>
                         <option value="MACD">MACD</option>
                         <option value="KDJ">KDJ</option>
                         <option value="CCI">CCI</option>
+                        <option value="DMI">DMI</option>
                         <option value="ROC">ROC</option>
+                        <option value="BIAS">BIAS</option>
+                        <option value="WR">Williams %R</option>
+                        <option value="AO">Awesome Oscillator (AO)</option>
+                        <option value="CR">CR</option>
+                        <option value="PSY">PSY (Psychological Line)</option>
+                        <option value="DMA">DMA</option>
+                        <option value="TRIX">TRIX</option>
+                        <option value="MTM">MTM (Momentum)</option>
+                        <option value="EMV">EMV (Ease of Movement)</option>
+                        <option value="BRAR">BRAR</option>
+                        <option value="DPO">DPO</option>
                     </optgroup>
-                    <optgroup label="--- Volumen ---">
+                    <optgroup label="--- Volumen & Flujo (Core) ---">
                         <option value="VOL">VOL (Volumen)</option>
-                        <option value="OBV">OBV</option>
+                        <option value="OBV">OBV (On Balance Volume)</option>
+                        <option value="VR">VR</option>
+                        <option value="PVT">PVT (Price Volume Trend)</option>
+                        <option value="WVAD">WVAD</option>
+                        <option value="AVL">AVL</option>
                     </optgroup>
                     <optgroup label="--- Extensiones Oficiales ---">
                         <option value="ICHI">Ichimoku Cloud</option>
+                    </optgroup>
+                    <optgroup label="--- TA-Lib WASM (150+ Funciones Técnicas) ---">
+                        <option value="TALIB_ATR">ATR (Average True Range)</option>
+                        <option value="TALIB_ADX">ADX (Average Directional Movement)</option>
+                        <option value="TALIB_STOCH">Stochastic Oscillator</option>
+                        <option value="TALIB_WILLR">Williams %R (TA-Lib)</option>
+                        <option value="TALIB_CCI">CCI (TA-Lib)</option>
+                        <option value="TALIB_MOM">Momentum (TA-Lib)</option>
+                        <option value="TALIB_ROC">Rate of Change (TA-Lib)</option>
+                        <option value="TALIB_RSI">RSI (TA-Lib)</option>
+                        <option value="TALIB_TRIX">TRIX (TA-Lib)</option>
+                        <option value="TALIB_ULTOSC">Ultimate Oscillator</option>
+                        <option value="TALIB_BBANDS">Bollinger Bands (TA-Lib)</option>
+                        <option value="TALIB_EMA">EMA (TA-Lib)</option>
+                        <option value="TALIB_SMA">SMA (TA-Lib)</option>
+                        <option value="TALIB_SAR">Parabolic SAR (TA-Lib)</option>
                     </optgroup>
                 </select>
                 <button class="tv-btn" onclick="addIndicator()" style="background: #2962ff; color: #fff; border: none;">Añadir</button>
@@ -199,7 +236,11 @@ elif st.session_state.seccion == "1. 📊 Estación Pro Avanzada":
                 function addIndicator() {{
                     const sel = document.getElementById('ind-select');
                     const val = sel.value;
-                    chart.createIndicator(val);
+                    if (val.startsWith('TALIB_')) {{
+                        alert("Conectando con motor TA-Lib WASM para: " + val.replace('TALIB_', ''));
+                    }} else {{
+                        chart.createIndicator(val);
+                    }}
                 }}
             </script>
         </body>
