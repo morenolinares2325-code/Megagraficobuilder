@@ -1,138 +1,178 @@
 import streamlit as st
 import streamlit.components.v1 as components
+import yfinance as yf
 import pandas as pd
-import numpy as np
 import json
 
-# Configuración de la página
-st.set_page_config(page_title="AvizorChart Pro - Suite Completa", layout="wide")
-
-st.title("📊 AvizorChart Pro | Suite Definitiva (KLineChart Pro + Talib-WASM)")
-
-# --- 1. BARRA LATERAL: BUILDER EXCLUSIVO DE PINE SCRIPT ---
-st.sidebar.header("⚙️ Editor Pine Script")
-pine_code_input = st.sidebar.text_area(
-    "Pega tu código Pine Script aquí:",
-    value="""// Estrategia Pine Script -> KLineChart Pro & Talib
-study("Avizor Ultimate Pro", overlay=true)
-fast_len = input(9, "Fast EMA")
-slow_len = input(21, "Slow EMA")
-""",
-    height=250
+# --- CONFIGURACIÓN DE LA PÁGINA ---
+st.set_page_config(
+    page_title="AvizorChart Pro | Live Trading Suite",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-show_signals = st.sidebar.checkbox("Mostrar Señales (Buy/Sell)", value=True)
-show_zones = st.sidebar.checkbox("Mostrar Zonas Sombreadas", value=True)
-
-compile_btn = st.sidebar.button("🚀 Compilar con Motor Completo")
-
-# --- 2. GENERADOR DE HISTÓRICO REALISTA (EURUSD) ---
-@st.cache_data
-def load_eurusd_data():
-    np.random.seed(42)
-    dates = pd.date_range(start="2026-01-01", periods=300, freq="h")
-    base_price = 1.0850
-    returns = np.random.normal(0, 0.0005, len(dates))
-    close_prices = base_price * np.cumprod(1 + returns)
-    
-    data = []
-    for i, date in enumerate(dates):
-        c = close_prices[i]
-        o = c * (1 + np.random.normal(0, 0.0002))
-        h = max(o, c) * (1 + abs(np.random.normal(0, 0.0003)))
-        l = min(o, c) * (1 - abs(np.random.normal(0, 0.0003)))
-        v = int(np.random.uniform(1000, 50000))
-        
-        data.append({
-            "timestamp": int(date.timestamp() * 1000),
-            "open": round(o, 5),
-            "high": round(h, 5),
-            "low": round(l, 5),
-            "close": round(c, 5),
-            "volume": v
-        })
-    return data
-
-chart_data = load_eurusd_data()
-json_data = json.dumps(chart_data)
-
-# --- 3. PLANTILLA HTML CON LA SUITE COMPLETA (CORE + PRO + EXT + TALIB) ---
-html_chart_code = f"""
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>KLineChart Pro Full Suite</title>
-    
-    <!-- 1. KLineChart Core & Pro -->
-    <script src="https://unpkg.com/klinecharts/dist/klinecharts.min.js"></script>
-    <!-- KLineChart Pro Script / Estilos si aplica -->
-    <script src="https://unpkg.com/@klinecharts/pro/dist/klinecharts-pro.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/@klinecharts/pro/dist/klinecharts-pro.css">
-
-    <!-- 2. Extensiones Oficiales (Overlays, Formas, Figuras) -->
-    <script src="https://unpkg.com/@klinecharts/extension/dist/klinecharts-extension.min.js"></script>
-
-    <!-- 3. TA-Lib WebAssembly (Motor de Indicadores Locales) -->
-    <!-- Se carga la librería de WebAssembly para análisis técnico de alto rendimiento -->
-    <script src="https://cdn.jsdelivr.net/npm/talib-web/lib/talib.min.js"></script>
-
+# Estilos CSS modernos para mejorar la interfaz visual
+st.markdown("""
     <style>
-        body, html {{
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #121212;
-            overflow: hidden;
-        }}
-        #chart-container {{
-            width: 100%;
-            height: 650px;
-        }}
+        .stApp { background-color: #0e1117; color: #ffffff; }
+        .main-header { font-size: 24px; font-weight: 700; color: #00d2ff; margin-bottom: 20px; }
+        .stMetric { background-color: #161b22; padding: 15px; border-radius: 10px; border: 1px solid #30363d; }
     </style>
-</head>
-<body>
-    <div id="chart-container"></div>
+""", unsafe_allow_html=True)
 
-    <script>
-        // Inicialización usando KLineChart Pro si está disponible, o fallback al core con extensiones
-        window.addEventListener('DOMContentLoaded', () => {{
-            try {{
-                // Si klinechartsPro está cargado correctamente:
-                if (typeof klinechartsPro !== 'undefined') {{
-                    const chartPro = new klinechartsPro.ChartPro({{
-                        container: 'chart-container',
-                        library: klinecharts,
-                        // Configuración inicial del gráfico Pro
-                    }});
-                    chartPro.applyNewData({json_data});
-                    console.log("KLineChart Pro inicializado con éxito.");
-                }} else {{
-                    // Fallback de seguridad al Core + Extensiones
-                    const chart = klinecharts.init('chart-container');
-                    chart.applyNewData({json_data});
-                    console.log("KLineChart Core + Extensiones cargados (Fallback).");
-                }}
-            }} catch (e) {{
-                console.error("Error al inicializar el gráfico Pro:", e);
+st.markdown('<div class="main-header">📈 AvizorChart Pro — Live Market & Pine Engine</div>', unsafe_allow_html=True)
+
+# --- 1. BARRA LATERAL (CONTROLES Y BUILDER PINE) ---
+st.sidebar.header("⚙️ Configuración del Activo")
+ticker_symbol = st.sidebar.selectbox(
+    "Selecciona Activo (yfinance)",
+    ["EURUSD=X", "BTC-USD", "ETH-USD", "AAPL", "GC=X", "NVDA"],
+    index=0
+)
+
+period = st.sidebar.selectbox("Periodo Histórico", ["1mo", "3mo", "6mo", "1y"], index=1)
+interval = st.sidebar.selectbox("Intervalo de Vela", ["1h", "1d", "15m"], index=0)
+
+st.sidebar.markdown("---")
+st.sidebar.header("📝 Editor Pine Script")
+pine_code = st.sidebar.text_area(
+    "Código Pine Script:",
+    value="""// Estrategia Pine Script Activa
+study("Avizor Trend Engine", overlay=true)
+fast_ema = input(9, "EMA Rápida")
+slow_ema = input(21, "EMA Lenta")
+// Lógica local integrada
+""",
+    height=220
+)
+
+apply_btn = st.sidebar.button("🚀 Aplicar Indicador al Gráfico", type="primary")
+
+# --- 2. CARGA DE DATOS REALES CON YFINANCE ---
+@st.cache_data(ttl=300)
+def fetch_market_data(ticker, period, interval):
+    try:
+        df = yf.download(ticker, period=period, interval=interval, progress=False)
+        if df.empty:
+            return pd.DataFrame()
+        
+        # Aplanar MultiIndex si yfinance lo devuelve en versiones recientes
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = df.columns.get_level_values(0)
+            
+        df = df.reset_index()
+        
+        # Detectar dinámicamente la columna de fecha/tiempo
+        date_col = df.columns[0]
+        
+        # Renombrar columnas clave de forma estándar
+        rename_dict = {date_col: 'Datetime', 'Open': 'open', 'High': 'high', 'Low': 'low', 'Close': 'close', 'Volume': 'volume'}
+        df = df.rename(columns=rename_dict)
+        
+        # Asegurar columnas requeridas
+        required = ['Datetime', 'open', 'high', 'low', 'close']
+        for col in required:
+            if col not in df.columns:
+                return pd.DataFrame()
+                
+        return df[['Datetime', 'open', 'high', 'low', 'close', 'volume']].dropna()
+    except Exception as e:
+        st.error(f"Error descargando datos: {e}")
+        return pd.DataFrame()
+
+df_market = fetch_market_data(ticker_symbol, period, interval)
+
+# --- 3. RENDERIZADO VISUAL Y GRÁFICO ---
+if df_market.empty:
+    st.warning(f"⚠️ No se han encontrado datos para **{ticker_symbol}**. Prueba seleccionando otro activo o intervalo.")
+else:
+    # Tarjetas de Métricas Superiores
+    latest = df_market.iloc[-1]
+    prev = df_market.iloc[-2] if len(df_market) > 1 else latest
+    price_change = ((latest['close'] - prev['close']) / prev['close']) * 100
+
+    col1, col2, col3, col4, col5 = st.columns(5)
+    col1.metric("Activo", ticker_symbol)
+    col2.metric("Último Cierre", f"{float(latest['close']):.4f}", f"{price_change:+.2f}%")
+    col3.metric("Máximo", f"{float(latest['high']):.4f}")
+    col4.metric("Mínimo", f"{float(latest['low']):.4f}")
+    col5.metric("Volumen", f"{int(latest.get('volume', 0)):,}")
+
+    # Preparar JSON para KLineChart
+    chart_records = []
+    for _, row in df_market.iterrows():
+        try:
+            ts = int(pd.Timestamp(row['Datetime']).timestamp() * 1000)
+            chart_records.append({
+                "timestamp": ts,
+                "open": float(row['open']),
+                "high": float(row['high']),
+                "low": float(row['low']),
+                "close": float(row['close']),
+                "volume": int(row.get('volume', 1000))
+            })
+        except:
+            continue
+
+    json_data = json.dumps(chart_records)
+
+    # HTML / JS con KLineChart y Extensiones Oficiales
+    html_chart_code = f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>KLineChart View</title>
+        <script src="https://unpkg.com/klinecharts/dist/klinecharts.min.js"></script>
+        <script src="https://unpkg.com/@klinecharts/extension/dist/klinecharts-extension.min.js"></script>
+        <style>
+            body, html {{
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                background-color: #0e1117;
+                overflow: hidden;
             }}
-        }});
-    </script>
-</body>
-</html>
-"""
+            #chart-box {{
+                width: 100%;
+                height: 620px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div id="chart-box"></div>
+        <script>
+            // Inicialización limpia del gráfico
+            const chart = klinecharts.init('chart-box');
+            const chartData = {json_data};
+            
+            if (chartData && chartData.length > 0) {{
+                chart.applyNewData(chartData);
+            }}
 
-# --- 4. RENDERIZAR EN STREAMLIT ---
-st.subheader("📈 EURUSD - Estación Profesional (Pro + TA-Lib WASM)")
-components.html(html_chart_code, height=670)
+            // Estética profesional modo oscuro
+            chart.setStyle({{
+                candle: {{
+                    type: 'candle_solid',
+                    bar: {{
+                        upColor: '#0ecb81',
+                        downColor: '#f6465d',
+                        noChangeColor: '#848e9c'
+                    }}
+                }},
+                grid: {{
+                    horizontal: {{ show: true, color: '#21262d' }},
+                    vertical: {{ show: true, color: '#21262d' }}
+                }}
+            }});
+        </script>
+    </body>
+    </html>
+    """
 
-# Tus secciones personalizadas intactas abajo
-col1, col2, col3 = st.columns(3)
-with col1:
-    st.info("💡 **Librerías Cargadas:** Core + Pro + Extensiones + TA-Lib WASM.")
-with col2:
-    st.success("⚡ **Rendimiento:** Cálculos locales en cliente sin coste.")
-with col3:
-    if st.button("📸 Capturar Pantalla"):
-        st.toast("Módulo de captura listo.", icon="📷")
+    # Renderizar componente gráfico con altura garantizada
+    components.html(html_chart_code, height=640)
+
+    # Barra inferior de estado
+    st.info(f"💡 **Estado:** Conectado a yfinance ({len(df_market)} velas cargadas). Listo para exportar a AvizorChart vía Cursor.")
