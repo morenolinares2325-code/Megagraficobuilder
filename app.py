@@ -3,29 +3,30 @@ import streamlit.components.v1 as components
 
 # Configuración inicial de la página
 st.set_page_config(
-    page_title="Avizor Builder Pro - Advanced Sandbox",
+    page_title="Avizor Builder Pro - EURUSD Sandbox",
     layout="wide"
 )
 
-st.title("🛠️ Avizor Builder Pro: Entorno de Gráficos & Indicadores Pro")
+st.title("🛠️ Avizor Builder Pro: Entorno EURUSD & KLineChart")
 
 if "render_trigger" not in st.session_state:
     st.session_state.render_trigger = False
 
 class IndicatorBuilderEngine:
     def __init__(self):
-        self.version = "2.3.0"
+        self.version = "2.4.0"
 
     def parse_to_klinechart(self, mode: str, raw_code: str) -> str:
         if mode == "KLineChart (JS/TS)":
             return raw_code
         
-        # Plantilla del Canal Keltner optimizada para un histórico amplio
+        # Plantilla Keltner Pro adaptada a escala Forex (EURUSD)
         return """
         if (typeof klinecharts !== 'undefined') {
+            // 1. Registramos el indicador
             klinecharts.registerIndicator({
-                name: "AVIZOR_KELTNER_PRO",
-                shortName: "Keltner Channel Pro",
+                name: "AVIZOR_KELTNER_EURUSD",
+                shortName: "Keltner EURUSD",
                 series: 'price',
                 figures: [
                     { key: 'upper', title: 'Banda Sup: ', type: 'line' },
@@ -43,7 +44,7 @@ class IndicatorBuilderEngine:
                             sum += arr[j].close;
                         }
                         const sma = sum / period;
-                        const atr = (bar.high - bar.low) * 1.5;
+                        const atr = (bar.high - bar.low) * 1.5; // Rango adaptado a pips
                         return {
                             upper: sma + atr,
                             middle: sma,
@@ -59,6 +60,9 @@ class IndicatorBuilderEngine:
                     ]
                 }
             });
+
+            // 2. IMPORTANTE: Lo añadimos al gráfico para que se dibuje físicamente
+            chart.createIndicator("AVIZOR_KELTNER_EURUSD");
         }
         """
 
@@ -70,7 +74,7 @@ def get_chart_html(indicator_script: str = ""):
     <html>
     <head>
         <meta charset="utf-8" />
-        <title>KLineCharts Pro Historical</title>
+        <title>KLineCharts EURUSD Pro</title>
         <script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.js"></script>
         <style>
             body, html {
@@ -93,11 +97,12 @@ def get_chart_html(indicator_script: str = ""):
     <body>
         <div id="chart"></div>
         <div id="debug-panel">
-            <span id="status-text">Estado: Generando histórico de 2 años...</span>
+            <span id="status-text">Estado: Inicializando motor EURUSD...</span>
             <span id="candles-count">Velas: 0</span>
         </div>
 
         <script>
+            let chart; // Variable global para el gráfico
             const statusText = document.getElementById('status-text');
             const candlesCount = document.getElementById('candles-count');
 
@@ -113,7 +118,7 @@ def get_chart_html(indicator_script: str = ""):
                             throw new Error("La librería klinecharts no se cargó correctamente.");
                         }
 
-                        const chart = klinecharts.init('chart', {
+                        chart = klinecharts.init('chart', {
                             styles: {
                                 grid: {
                                     horizontal: { show: true, color: '#21262d' },
@@ -124,49 +129,51 @@ def get_chart_html(indicator_script: str = ""):
                                         upColor: '#238636',
                                         downColor: '#da3633',
                                         noChangeColor: '#8b949e'
+                                    },
+                                    priceMark: {
+                                        last: {
+                                            show: true
+                                        }
                                     }
                                 }
                             }
                         });
                         
-                        setStatus("Construyendo histórico masivo (Diario)...");
+                        setStatus("Generando histórico realista de EURUSD...");
 
-                        // Generación de un histórico de ~500 velas diarias (aprox. 2 años de bolsa)
-                        let baseTime = Date.now() - (500 * 24 * 60 * 60 * 1000); 
-                        let basePrice = 100.0;
+                        // Generación de histórico de velas estilo EURUSD (precio base ~1.0850)
+                        let baseTime = Date.now() - (400 * 24 * 60 * 60 * 1000); 
+                        let basePrice = 1.0850;
                         let mockData = [];
 
-                        for (let i = 0; i < 500; i++) {
-                            let trend = Math.sin(i / 30) * 2.5; // Olas de mercado realistas
-                            let variation = (Math.random() - 0.49) * 4.0 + trend;
+                        for (let i = 0; i < 400; i++) {
+                            let trend = Math.sin(i / 25) * 0.0025; // Oscilación típica de divisas
+                            let variation = (Math.random() - 0.49) * 0.0035 + trend;
                             let open = basePrice;
                             let close = open + variation;
-                            let high = Math.max(open, close) + Math.random() * 2.5;
-                            let low = Math.min(open, close) - Math.random() * 2.5;
-                            let volume = Math.floor(Math.random() * 80000) + 15000;
-
-                            // Evitar precios negativos
-                            if (low < 5) low = 5;
+                            let high = Math.max(open, close) + Math.random() * 0.0015;
+                            let low = Math.min(open, close) - Math.random() * 0.0015;
+                            let volume = Math.floor(Math.random() * 50000) + 10000;
 
                             mockData.push({
-                                timestamp: baseTime + (i * 24 * 60 * 60 * 1000), // un día por vela
-                                open: parseFloat(open.toFixed(2)),
-                                high: parseFloat(high.toFixed(2)),
-                                low: parseFloat(low.toFixed(2)),
-                                close: parseFloat(close.toFixed(2)),
+                                timestamp: baseTime + (i * 24 * 60 * 60 * 1000),
+                                open: parseFloat(open.toFixed(5)),
+                                high: parseFloat(high.toFixed(5)),
+                                low: parseFloat(low.toFixed(5)),
+                                close: parseFloat(close.toFixed(5)),
                                 volume: volume
                             });
                             basePrice = close;
                         }
 
                         chart.applyNewData(mockData);
-                        candlesCount.innerText = "Velas: " + mockData.length + " (2 Años)";
-                        setStatus("Histórico masivo aplicado.");
+                        candlesCount.innerText = "Velas EURUSD: " + mockData.length;
+                        setStatus("Histórico de divisas aplicado.");
 
                         /* --- INYECCIÓN DEL SCRIPT DEL INDICADOR --- */
                         REPLACE_INDICATOR_SCRIPT
                         
-                        setStatus("¡Indicador Keltner Pro aplicado sobre 2 años de histórico!");
+                        setStatus("¡Canal Keltner dibujado correctamente en EURUSD!");
                     } catch (e) {
                         setStatus("Error: " + e.message, true);
                     }
@@ -182,18 +189,17 @@ def get_chart_html(indicator_script: str = ""):
 col_editor, col_chart = st.columns([1, 1.6])
 
 with col_editor:
-    st.subheader("⚙️ Editor de Estrategia & Builder")
+    st.subheader("⚙️ Editor de Estrategia EURUSD")
     
     selected_mode = st.selectbox(
         "Modo de Lenguaje:",
         ["KLineChart (JS/TS)", "Pine Script", "MQL5", "cTrader (C#)"]
     )
     
-    # Ponemos por defecto el código del Canal Keltner que querías probar
-    default_code = """if (typeof klinecharts !== 'undefined') {
+    default_code = """if (typeof klinecharts !== 'undefined' && chart) {
     klinecharts.registerIndicator({
-        name: "AVIZOR_KELTNER_PRO",
-        shortName: "Keltner Channel Pro",
+        name: "AVIZOR_KELTNER_EURUSD",
+        shortName: "Keltner EURUSD",
         series: 'price',
         figures: [
             { key: 'upper', title: 'Banda Sup: ', type: 'line' },
@@ -219,16 +225,17 @@ with col_editor:
             ]
         }
     });
+    chart.createIndicator("AVIZOR_KELTNER_EURUSD");
 }"""
     
     code_input = st.text_area("Código fuente del Indicador:", value=default_code, height=400)
     
-    if st.button("🚀 Crear y Mostrar en Gráfico", type="primary", use_container_width=True):
+    if st.button("🚀 Crear y Dibujar en Gráfico", type="primary", use_container_width=True):
         st.session_state.render_trigger = True
-        st.success(f"¡Indicador compilado desde **{selected_mode}** y aplicado al histórico de 2 años!")
+        st.success(f"¡Indicador aplicado al gráfico de EURUSD!")
 
 with col_chart:
-    st.subheader("📊 Visualizador KLineChart Pro (Histórico Extendido)")
+    st.subheader("📊 Gráfico EURUSD (KLineChart)")
     compiled_code = engine.parse_to_klinechart(selected_mode, code_input)
     chart_html = get_chart_html(compiled_code)
     components.html(chart_html, height=740)
