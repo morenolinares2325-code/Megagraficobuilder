@@ -16,7 +16,6 @@ st.markdown("""
     <style>
         .stApp { background-color: #0e1117; color: #ffffff; }
         .main-title { font-size: 26px; font-weight: 750; color: #00d2ff; margin-bottom: 10px; }
-        .card { background-color: #161b22; padding: 15px; border-radius: 8px; border: 1px solid #30363d; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -59,7 +58,7 @@ if menu_choice == "1. 📊 Gráfico":
     df_market = load_market_data(ticker, period, interval)
 
     if df_market.empty:
-        st.warning(f"No hay datos disponibles para {ticker}. Comprueba tu conexión.")
+        st.warning(f"No hay datos disponibles para {ticker}. Comprueba tu conexión o selecciona otro activo.")
     else:
         # Métricas rápidas
         last = df_market.iloc[-1]
@@ -89,7 +88,7 @@ if menu_choice == "1. 📊 Gráfico":
 
         json_data = json.dumps(chart_records)
 
-        # HTML / JS corregido sin window.onload para evitar pantalla en negro
+        # HTML / JS con depuración de errores visual en pantalla
         html_chart_code = f"""
         <!DOCTYPE html>
         <html lang="es">
@@ -104,31 +103,55 @@ if menu_choice == "1. 📊 Gráfico":
                     width: 100%;
                     height: 100%;
                     background-color: #0e1117;
+                    color: #fff;
+                    font-family: sans-serif;
                     overflow: hidden;
                 }}
                 #chart {{
                     width: 100%;
-                    height: 600px;
+                    height: 560px;
+                }}
+                #debug-box {{
+                    color: #f6465d;
+                    padding: 15px;
+                    font-size: 14px;
+                    font-weight: bold;
                 }}
             </style>
         </head>
         <body>
+            <div id="debug-box">Cargando motor gráfico...</div>
             <div id="chart"></div>
             <script>
+                const debugBox = document.getElementById('debug-box');
                 try {{
-                    const chart = klinecharts.init('chart');
-                    const data = {json_data};
-                    if (data && data.length > 0) {{
-                        chart.applyNewData(data);
+                    if (typeof klinecharts === 'undefined') {{
+                        throw new Error("KLineCharts no se ha podido cargar desde el CDN (Bloqueo de red o error de script).");
                     }}
+                    
+                    debugBox.innerText = "Inicializando contenedor KLineChart...";
+                    const chart = klinecharts.init('chart');
+                    
+                    const data = {json_data};
+                    if (!data || data.length === 0) {{
+                        throw new Error("El array de datos de velas está vacío.");
+                    }}
+                    
+                    debugBox.innerText = "Renderizando " + data.length + " velas...";
+                    chart.applyNewData(data);
+                    
                     chart.setStyle({{
                         candle: {{
                             type: 'candle_solid',
                             bar: {{ upColor: '#0ecb81', downColor: '#f6465d', noChangeColor: '#848e9c' }}
                         }}
                     }});
+                    
+                    // Si todo va bien, ocultamos el cuadro de texto de depuración
+                    debugBox.style.display = 'none';
                 }} catch (error) {{
-                    console.error("Error al inicializar KLineChart:", error);
+                    debugBox.innerText = "❌ ERROR EN JS: " + error.message;
+                    console.error(error);
                 }}
             </script>
         </body>
@@ -182,7 +205,7 @@ elif menu_choice == "3. 🚀 Repositorio para Cursor":
     <script src="https://unpkg.com/@klinecharts/pro/dist/klinecharts-pro.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/@klinecharts/pro/dist/klinecharts-pro.css">
     <script src="https://unpkg.com/@klinecharts/extension/dist/klinecharts-extension.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/talib-web/lib/talib.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tal_web/lib/talib.min.js"></script>
 </head>
 <body>
     <div id="avizor-chart-root" style="width: 100vw; height: 100vh;"></div>
